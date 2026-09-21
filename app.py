@@ -39,7 +39,7 @@ BG_IMAGE = get_image_data("mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.j
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {{
     --neon-blue: #38bdf8;
@@ -56,7 +56,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     min-height: 100vh;
     background: transparent !important;
     color: var(--white);
-    font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }}
 
 .background-car {{
@@ -83,13 +83,13 @@ html, body, [data-testid="stAppViewContainer"] {{
     position: relative;
     z-index: 2;
     max-width: 1100px;
-    padding-top: 2rem;
+    padding-top: 2.5rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Hero Header & Rectangles Design */
+/* Hero Header & Unified Title Style */
 .hero-box {{
     text-align: center;
     margin: 10px auto 35px auto;
@@ -98,28 +98,17 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 .hero-title {{
     margin: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    font-size: clamp(2.6rem, 4.5vw, 4.2rem);
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
     font-weight: 800;
     letter-spacing: -1.5px;
 }}
-.rect-apex {{
-    background: #38bdf8;
-    color: #030712;
-    padding: 4px 22px;
-    border-radius: 12px;
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+.title-apex {{
+    color: var(--neon-blue);
+    text-shadow: 0 0 30px rgba(56, 189, 248, 0.45);
 }}
-.rect-motors {{
-    background: #0f172a;
-    color: #f8fafc;
-    border: 2px solid #38bdf8;
-    padding: 4px 22px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+.title-motors {{
+    color: #ffffff;
+    margin-left: 6px;
 }}
 
 /* شريط البحث الموحد (Glassmorphism & Neon Blue) */
@@ -146,6 +135,8 @@ div[data-testid="stTextInput"], div[data-testid="stTextInput"] * {{
     outline: none !important;
     color: #ffffff !important;
     font-size: 0.95rem !important;
+    direction: ltr !important;
+    text-align: left !important;
 }}
 
 div[data-testid="stFileUploader"] {{
@@ -189,7 +180,6 @@ div[data-testid="stFileUploader"] button span, div[data-testid="stFileUploader"]
     display: none !important;
 }}
 
-/* إخفاء زر الـ submit البارز تماماً الاعتماد على الـ Enter */
 div[data-testid="stFormSubmitButton"] {{
     display: none !important;
 }}
@@ -348,7 +338,7 @@ class DualPlatformMarketScraper:
             years = [2024, 2022, 2020, 2018, 2016]
             base_prices = {"kia": 1850000.0, "mercedes": 2900000.0, "hyundai": 1450000.0, "toyota": 1600000.0}
             p_seed = base_prices.get(clean_b, 1500000.0)
-            locs = ["التجمع الخامس", "الشيخ زايد", "مدينة نصر", "مصر الجديدة", "المعادي"]
+            locs = ["New Cairo", "Sheikh Zayed", "Nasr City", "Heliopolis", "Maadi"]
 
             for i, yr in enumerate(years):
                 adj_price = round(p_seed * (1 - (2024 - yr) * 0.08) + random.uniform(-30000, 30000), -3)
@@ -394,9 +384,9 @@ def add_valuation_columns(results_df: pd.DataFrame) -> pd.DataFrame:
     return results_df
 
 def hybrid_search(user_query: str = "", top_k: int = 8):
-    BRANDS = {"كيا": "kia", "kia": "kia", "مرسيدس": "mercedes", "mercedes": "mercedes", "هيونداي": "hyundai", "hyundai": "hyundai", "تويوتا": "toyota", "toyota": "toyota"}
-    MODELS = {"سبورتاج": "sportage", "sportage": "sportage", "cla": "cla", "توسان": "tucson", "كورولا": "corolla"}
-    LOCS = {"تجمع": "Tagamo3", "زايد": "Sheikh Zayed", "معادي": "Maadi"}
+    BRANDS = {"kia": "kia", "mercedes": "mercedes", "hyundai": "hyundai", "toyota": "toyota", "bmw": "bmw"}
+    MODELS = {"sportage": "sportage", "cla": "cla", "tucson": "tucson", "corolla": "corolla", "c180": "c180"}
+    LOCS = {"taga": "Tagamo3", "zayed": "Sheikh Zayed", "maadi": "Maadi", "nasr": "Nasr City"}
 
     det_b, det_m, det_l = "kia", "sportage", None
     q = user_query.lower()
@@ -420,13 +410,12 @@ def hybrid_search(user_query: str = "", top_k: int = 8):
     return add_valuation_columns(sorted_df)
 
 # ------------------------------------------------------------------------------
-# 4. UI Layout & Enter-to-Search Hub
+# 4. Clean Unified Title & Search Hub
 # ------------------------------------------------------------------------------
 st.markdown("""
 <div class="hero-box">
     <h1 class="hero-title">
-        <span class="rect-apex">Apex</span>
-        <span class="rect-motors">Motors</span>
+        <span class="title-apex">Apex</span><span class="title-motors">Motors</span>
     </h1>
 </div>
 """, unsafe_allow_html=True)
@@ -436,11 +425,10 @@ with c_search:
     with st.form("search_form", clear_on_submit=False):
         c_in, c_up = st.columns([0.91, 0.09])
         with c_in:
-            user_query = st.text_input("Search", placeholder="اكتبي موديل السيارة أو المواصفات واضغطي Enter...", label_visibility="collapsed")
+            user_query = st.text_input("Search", placeholder="Type car model or specifications and press Enter...", label_visibility="collapsed")
         with c_up:
             uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
         
-        # تنفيذ تلقائي عند الضغط على Enter داخل النموذج
         submitted = st.form_submit_button("Search", use_container_width=True)
 
 # ------------------------------------------------------------------------------
@@ -449,14 +437,14 @@ with c_search:
 if submitted or (user_query and user_query.strip()) or uploaded_file:
     det_car = ""
     if uploaded_file:
-        with st.spinner("🔍 تحليل صورة السيارة بالرؤية الحاسوبية..."):
+        with st.spinner("Analyzing vehicle image with Vision AI..."):
             im = Image.open(uploaded_file)
             det_car = classify_car(im)
             if det_car:
                 st.markdown(f"""
                 <div style="text-align: center; margin: 15px 0;">
                     <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid var(--neon-blue); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem;">
-                        📷 تم التعرف على السيارة: <strong>{det_car}</strong>
+                        📷 Detected Vehicle: <strong>{det_car}</strong>
                     </span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -466,7 +454,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
 
     _, col_res, _ = st.columns([1, 2.6, 1])
     with col_res:
-        st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:25px 0 15px;">🎯 نتائج البحث اللحظي لـ: "{final_q}"</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:25px 0 15px;">🎯 Live Market Results for: "{final_q}"</div>', unsafe_allow_html=True)
 
         for _, r in df_res.iterrows():
             deal = str(r.get('deal_label', 'Fair Market Price'))
@@ -485,22 +473,22 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
                 </div>
                 <div style="display: flex; gap: 15px; margin-top: 8px; color: #94a3b8; font-size: 0.88rem;">
                     <span>⚙️ {r['transmission']}</span>
-                    <span>🛣️ {r['mileage']:,.0f} كم</span>
+                    <span>🛣️ {r['mileage']:,.0f} km</span>
                     <span>📍 {r['location']}</span>
-                    <span>⚡ التطابق: {r['match_score']}%</span>
+                    <span>⚡ Match: {r['match_score']}%</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <span style="color: #94a3b8; font-size: 0.82rem;">السعر المعروض:</span><br>
-                        <strong style="color: #fff; font-size: 1.2rem;">{r['price']:,.0f} ج.م</strong>
+                        <span style="color: #94a3b8; font-size: 0.82rem;">Listed Price:</span><br>
+                        <strong style="color: #fff; font-size: 1.2rem;">{r['price']:,.0f} EGP</strong>
                     </div>
                     <div>
-                        <span style="color: #94a3b8; font-size: 0.82rem;">السعر العادل (CatBoost):</span><br>
-                        <strong style="color: var(--neon-blue); font-size: 1.2rem;">{r['predicted_fair_price']:,.0f} ج.م</strong>
+                        <span style="color: #94a3b8; font-size: 0.82rem;">Fair Price (CatBoost):</span><br>
+                        <strong style="color: var(--neon-blue); font-size: 1.2rem;">{r['predicted_fair_price']:,.0f} EGP</strong>
                     </div>
                     <div>
                         <a href="{r['item_url']}" target="_blank" style="display: inline-block; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--neon-blue); color: #fff; padding: 7px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">
-                            🔗 فتح الإعلان ↗
+                            View Listing ↗
                         </a>
                     </div>
                 </div>
@@ -508,7 +496,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
             """, unsafe_allow_html=True)
 else:
     st.markdown("""
-    <div style="text-align: center; color: #8b929a; margin-top: 50px;">
-        <p style="font-size: 0.95rem;">اكتبي طلبك في شريط البحث بالأعلى واضغطي <strong>Enter</strong> للبحث الفوري، أو اضغطي أيقونة الكاميرا 📷 لرفع صورة السيارة</p>
+    <div style="text-align: center; color: #8b929a; margin-top: 40px;">
+        <p style="font-size: 0.95rem;">Type your search query above and press <strong>Enter</strong>, or click the camera icon 📷 to scan a car image</p>
     </div>
     """, unsafe_allow_html=True)
