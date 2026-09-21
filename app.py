@@ -20,74 +20,75 @@ import streamlit.components.v1 as components
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 # ------------------------------------------------------------------------------
-# 1. Page Configuration & Clean Minimal Light Styling
+# 1. Page Config & High-End Luxury Dark Styling
 # ------------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Apex Motors • تداول وتسعير السيارات الذكي",
-    page_icon="🚗",
+    page_title="Apex Motors • AI Automotive Intelligence",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Tajawal:wght@500;700;800&display=swap');
     
     #MainMenu, header, footer {visibility: hidden !important; display: none !important;}
     
     .stApp {
-        background-color: #f8fafc !important;
-        font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif !important;
-        color: #0f172a !important;
+        background: radial-gradient(circle at 50% -20%, #1e293b 0%, #090d16 65%, #020408 100%) !important;
+        font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif !important;
+        color: #f8fafc !important;
     }
     
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 3rem !important;
-        max-width: 960px !important;
+        max-width: 980px !important;
         margin: auto;
     }
 
-    /* حقل الإدخال النصي */
+    /* تحسين صندوق الإدخال التابع لـ Streamlit */
     .stTextInput > div > div > input {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        border: 1.5px solid #cbd5e1 !important;
-        border-radius: 10px !important;
-        padding: 12px 16px !important;
+        background: rgba(15, 23, 42, 0.85) !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        border-radius: 12px !important;
+        padding: 14px 18px !important;
         font-size: 15px !important;
         direction: rtl !important;
         text-align: right !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
     }
     .stTextInput > div > div > input:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3) !important;
     }
 
-    /* منطقة رفع الصورة */
+    /* تحسين صندوق رفع الملفات */
     .stFileUploader section {
-        background-color: #ffffff !important;
-        border: 1.5px dashed #94a3b8 !important;
-        border-radius: 10px !important;
+        background: rgba(15, 23, 42, 0.6) !important;
+        border: 1px dashed rgba(56, 189, 248, 0.3) !important;
+        border-radius: 12px !important;
         padding: 8px !important;
     }
 
     /* زر البحث الرئيسي */
     .stButton > button {
-        background: #2563eb !important;
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
         color: #ffffff !important;
         font-family: 'Tajawal', sans-serif !important;
         font-size: 16px !important;
         font-weight: 700 !important;
         border: none !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         padding: 12px 24px !important;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
-        transition: background-color 0.2s ease !important;
+        box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4) !important;
+        transition: all 0.2s ease !important;
     }
     .stButton > button:hover {
-        background: #1d4ed8 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 22px rgba(56, 189, 248, 0.5) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -112,7 +113,7 @@ class ApexProductionValuationEngine:
         return self.model.predict(pool)
 
 # ------------------------------------------------------------------------------
-# 3. Model Loading
+# 3. Load Models
 # ------------------------------------------------------------------------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 VISION_MODEL = "dima806/car_models_image_detection"
@@ -185,7 +186,7 @@ def classify_car_image(image_input) -> str:
         return ""
 
 # ------------------------------------------------------------------------------
-# 5. Dual Platform Scraper
+# 5. Dual Platform Market Scraper
 # ------------------------------------------------------------------------------
 class DualPlatformMarketScraper:
     def __init__(self):
@@ -311,12 +312,12 @@ def add_valuation_columns(results_df: pd.DataFrame) -> pd.DataFrame:
 
     results_df["deal_label"] = np.select(
         [pct_deviation <= -0.05, pct_deviation >= 0.08],
-        ["صفقة ممتازة 🔥", "أعلى من سعر السوق ⚠️"],
-        default="سعر عادل ومناسب ⚖️"
+        ["Great Deal 🔥", "Overpriced ⚠️"],
+        default="Fair Market Price ⚖️"
     )
 
     def generate_explanation(row):
-        parts = [f"السعر المعروض {row['price']:,.0f} ج.م مقارنة بالقيمة العادلة المقدرة {row['predicted_fair_price']:,.0f} ج.م."]
+        parts = [f"Listed at {row['price']:,.0f} EGP vs estimated fair value of {row['predicted_fair_price']:,.0f} EGP ({row['deal_label']})."]
         if row.get("condition_tag") == "Fabrika": parts.append("فابريكا بالكامل.")
         if row.get("trim_tier") in ("Topline", "Highline"): parts.append(f"الفئة: {row['trim_tier']}.")
         if pd.notna(row.get("location")): parts.append(f"المكان: {str(row['location']).title()}.")
@@ -395,14 +396,14 @@ def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8)
             else:
                 is_relaxed_match = True
                 car_tag = f"{detected_brand.capitalize() if detected_brand else ''} {detected_model.capitalize() if detected_model else ''}".strip()
-                relaxation_notes.append(f"لم تتوفر سيارات مطابقة في ({detected_location})، تم عرض السيارات المتاحة في النطاق المجاور.")
+                relaxation_notes.append(f"لم تتوفر سيارات مطابقة في ({detected_location})، تم توسيع النطاق لأقرب سيارات {car_tag} بالقاهرة الكبرى.")
 
         if budget_target and not sub_df.empty:
             sub_df["price_dist"] = (sub_df["price"] - budget_target).abs()
             sub_df = sub_df.sort_values("price_dist", ascending=True)
             if sub_df["price"].min() > budget_target * 1.25:
                 is_relaxed_match = True
-                relaxation_notes.append(f"الميزانية المحددة ({budget_target:,.0f} ج.م) أقل من المعروض بالسوق، تم ترتيب الأقرب لها.")
+                relaxation_notes.append(f"الميزانية المطلوبة ({budget_target:,.0f} EGP) أقل من أسعار السوق المتاحة لهذا الموديل، تم ترتيب الأقرب لميزانيتك.")
 
     if sub_df.empty:
         return pd.DataFrame(), False, ""
@@ -426,19 +427,19 @@ def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8)
     return top_results, is_relaxed_match, " • ".join(relaxation_notes)
 
 # ------------------------------------------------------------------------------
-# 8. Clean Light Cards HTML Generator
+# 8. Luxury Glassmorphism Cards Generator
 # ------------------------------------------------------------------------------
 def generate_user_search_html(query: str, results: pd.DataFrame, is_relaxed: bool, notice: str):
-    count_text = f"{len(results)} نتائج" if not results.empty else "لا توجد نتائج"
+    count_text = f"{len(results)} نتائج حية" if not results.empty else "0 نتائج"
 
     html_out = f"""
-    <div style="font-family: 'Tajawal', 'Segoe UI', sans-serif; max-width: 940px; margin: 15px auto; color: #0f172a;">
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+    <div style="font-family: 'Plus Jakarta Sans', 'Tajawal', sans-serif; max-width: 940px; margin: 10px auto; color: #f8fafc;">
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); padding: 20px 24px; border-radius: 14px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
             <div>
-                <div style="font-size: 13px; color: #64748b; font-weight: 600;">نتائج البحث اللحظي من السوق</div>
-                <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 2px;">🔍 {query}</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #38bdf8; font-weight: 800; letter-spacing: 1px;">Live Marketplace Scan</div>
+                <div style="font-size: 17px; font-weight: 700; color: #f8fafc; margin-top: 4px;">🎯 الاستعلام النشط: "{query}"</div>
             </div>
-            <div style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;">
                 {count_text}
             </div>
         </div>
@@ -446,81 +447,81 @@ def generate_user_search_html(query: str, results: pd.DataFrame, is_relaxed: boo
 
     if is_relaxed and notice:
         html_out += f"""
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 18px; margin-bottom: 18px; color: #b45309; font-size: 14px; font-weight: 500; text-align: right; direction: rtl;">
-            ⚠️ <strong>تنويه:</strong> {notice}
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; color: #fbbf24; font-size: 13.5px; font-weight: 500; text-align: right; direction: rtl;">
+            ⚠️ <strong>تنويه المنظومة:</strong> {notice}
         </div>
         """
 
     if results.empty:
         html_out += """
-        <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 10px; padding: 25px; text-align: center; color: #b91c1c; font-size: 15px;">
-            لم يتم العثور على سيارات مطابقة للمعايير المحددة حالياً.
+        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 25px; text-align: center; color: #f87171; font-size: 15px;">
+            لم يتم العثور على نتائج تطابق معايير البحث الحالية.
         </div></div>
         """
         return html_out
 
     for idx, (_, car) in enumerate(results.iterrows(), 1):
-        deal = str(car.get('deal_label', 'سعر عادل'))
+        deal = str(car.get('deal_label', 'Fair Market Price'))
         badge_bg, badge_border, badge_color = (
-            ("#f0fdf4", "#bbf7d0", "#166534") if "ممتازة" in deal or "🔥" in deal 
-            else (("#fef2f2", "#fecaca", "#991b1b") if "أعلى" in deal or "⚠️" in deal 
-            else ("#eff6ff", "#bfdbfe", "#1d4ed8"))
+            ("rgba(16, 185, 129, 0.12)", "rgba(16, 185, 129, 0.3)", "#34d399") if "Great Deal" in deal or "🔥" in deal 
+            else (("rgba(239, 68, 68, 0.12)", "rgba(239, 68, 68, 0.3)", "#f87171") if "Overpriced" in deal or "⚠️" in deal 
+            else ("rgba(56, 189, 248, 0.1)", "rgba(56, 189, 248, 0.25)", "#38bdf8"))
         )
 
         diff = car.get('price_difference', 0)
-        diff_text = f"{abs(diff):,.0f} ج.م {'أقل من السعر المقدر' if diff <= 0 else 'أعلى من السعر المقدر'}"
+        diff_text = f"{abs(diff):,.0f} EGP {'أقل من القيمة التقديرية' if diff <= 0 else 'أعلى من القيمة التقديرية'}"
         source_name = car.get("source", "Hatla2ee")
 
         html_out += f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px;">
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 16px; margin-bottom: 16px;">
                 <div>
-                    <div style="font-size: 19px; font-weight: 700; color: #0f172a;">#{idx} {car.get('name', f"{car.get('brand')} {car.get('model')}")}</div>
+                    <span style="font-size: 21px; font-weight: 800; color: #ffffff;">#{idx} {car.get('name', f"{car.get('brand')} {car.get('model')}")}</span>
                     <div style="margin-top: 6px; display: flex; gap: 8px;">
-                        <span style="background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">{source_name}</span>
-                        <span style="background: #eff6ff; color: #2563eb; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">دقة التطابق: {car.get('match_score', 0):.1f}%</span>
+                        <span style="background: rgba(255, 255, 255, 0.06); color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">{source_name}</span>
+                        <span style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">دقة التطابق: {car.get('match_score', 0):.1f}%</span>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 22px; font-weight: 800; color: #2563eb;">{car.get('price', 0):,.0f} <span style="font-size: 13px; font-weight: 600; color: #64748b;">ج.م</span></div>
-                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">السعر المعروض</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #38bdf8;">{car.get('price', 0):,.0f} <span style="font-size: 13px; font-weight: 600; color: #64748b;">EGP</span></div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">السعر المعروض بالسوق</div>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; direction: rtl; text-align: right;">
-                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
-                    <div style="font-size: 11px; color: #64748b;">المدينة / المنطقة</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">📍 {str(car.get('location', 'القاهرة')).title()}</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; direction: rtl; text-align: right;">
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); padding: 10px 14px; border-radius: 8px;">
+                    <div style="font-size: 11px; color: #64748b;">الموقع / المدينة</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px;">📍 {str(car.get('location', 'القاهرة')).title()}</div>
                 </div>
-                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); padding: 10px 14px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">حالة الدهان</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">🎨 {car.get('condition_tag', 'Normal')}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px;">🎨 {car.get('condition_tag', 'Normal')}</div>
                 </div>
-                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); padding: 10px 14px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">فئة التجهيز</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">⚡ {car.get('trim_tier', 'Standard')}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px;">⚡ {car.get('trim_tier', 'Standard')}</div>
                 </div>
-                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04); padding: 10px 14px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">الناقل / الكيلومتر</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">⚙️ {car.get('transmission', 'Auto')} • {car.get('mileage', 0):,.0f} كم</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px;">⚙️ {car.get('transmission', 'Auto')} • {car.get('mileage', 0):,.0f} كم</div>
                 </div>
             </div>
 
-            <div style="background: {badge_bg}; border: 1px solid {badge_border}; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: {badge_bg}; border: 1px solid {badge_border}; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="display: inline-block; font-weight: 700; color: {badge_color}; font-size: 14px;">{deal}</span>
-                    <div style="font-size: 13px; color: #334155; margin-top: 2px;">{car.get('explanation', '')}</div>
+                    <span style="display: inline-block; font-weight: 800; color: {badge_color}; font-size: 14px; margin-bottom: 4px;">{deal}</span>
+                    <div style="font-size: 13px; color: #cbd5e1;">تم التقييم ومقارنة السعر عبر خط تدريب CatBoost المسجل لمواصفات السوق المصري.</div>
                 </div>
                 <div style="text-align: right; min-width: 170px;">
-                    <div style="font-size: 11px; color: #64748b;">السعر العادل المقدر:</div>
-                    <div style="font-size: 16px; font-weight: 700; color: #0f172a;">{car.get('predicted_fair_price', 0):,.0f} ج.م</div>
-                    <div style="font-size: 11px; font-weight: 600; color: {badge_color};">({diff_text})</div>
+                    <div style="font-size: 11px; color: #94a3b8;">السعر العادل التقديري:</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #ffffff;">{car.get('predicted_fair_price', 0):,.0f} EGP</div>
+                    <div style="font-size: 11px; font-weight: 700; color: {badge_color};">({diff_text})</div>
                 </div>
             </div>
 
             <div style="text-align: left;">
-                <a href="{car.get('item_url', '#')}" target="_blank" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                    🔗 فتح الإعلان الأصلي
+                <a href="{car.get('item_url', '#')}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); text-decoration: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                    🔗 فتح فحص الإعلان المباشر
                 </a>
             </div>
         </div>
@@ -530,43 +531,48 @@ def generate_user_search_html(query: str, results: pd.DataFrame, is_relaxed: boo
     return html_out
 
 # ------------------------------------------------------------------------------
-# 9. Clean Header & Search Hub
+# 9. Master Hero & Control Hub
 # ------------------------------------------------------------------------------
 st.markdown("""
-<div style="text-align: center; margin-bottom: 25px;">
-    <h1 style="font-size: 34px; font-weight: 800; color: #0f172a; margin: 0;">
-        Apex Motors • محرك تسعير وبحث السيارات
+<div style="text-align: center; padding: 30px 0 25px 0;">
+    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 18px; border-radius: 9999px; margin-bottom: 18px;">
+        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 10px #38bdf8;"></span>
+        <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; color: #38bdf8;">Apex Auto Intelligence OS</span>
+    </div>
+    <h1 style="font-size: 48px; font-weight: 800; letter-spacing: -1px; margin: 0; background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Apex Motors
     </h1>
-    <p style="color: #64748b; font-size: 15px; margin-top: 6px;">
-        فحص الصور بالذكاء الاصطناعي، سحب الإعلانات الحية من السوق، وتقدير السعر العادل
+    <p style="color: #94a3b8; font-size: 16px; font-weight: 400; margin-top: 10px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+        منظومة ذكاء اصطناعي متكاملة: فحص صور السيارات بالـ Vision Transformers، والسحب اللحظي من السوق، والتقييم العادل بـ CatBoost
     </p>
 </div>
 """, unsafe_allow_html=True)
 
+# صندوق البحث الموحد في المنتصف
 with st.container():
     st.markdown("""
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 20px;">
+    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); margin-bottom: 25px;">
     """, unsafe_allow_html=True)
-
+    
     col1, col2 = st.columns([1, 2.2], gap="large")
-
+    
     with col1:
-        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;'>📷 فحص صورة السيارة (اختياري)</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;'>📷 فحص صورة السيارة (اختياري)</div>", unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Vehicle Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
         if uploaded_file:
             view_img = Image.open(uploaded_file)
-            st.image(view_img, caption="الصورة المرفوعة", use_container_width=True)
+            st.image(view_img, caption="Query Vehicle Image", use_container_width=True)
 
     with col2:
-        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;'>💬 المواصفات والشروط والميزانية (بالعامية المصرية):</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;'>💬 الشروط والمواصفات (بالعامية أو الإنجليزية)</div>", unsafe_allow_html=True)
         query_input = st.text_input(
             "Query Text",
             value="فابريكا أعلى فئة في زايد بـ 800 الف",
-            placeholder="اكتبي الماركة أو المواصفات مثل: كيا سبورتاج فابريكا في التجمع...",
+            placeholder="مثال: كيا سبورتاج فابريكا في التجمع أو مرسيدس CLA...",
             label_visibility="collapsed"
         )
-        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
-        search_triggered = st.button("🚀 بدء البحث والتسعير اللحظي", use_container_width=True)
+        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+        search_triggered = st.button("⚡ تشغيل الفحص والبحث اللحظي", use_container_width=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -576,16 +582,20 @@ with st.container():
 if search_triggered:
     detected_car = ""
     if uploaded_file:
-        with st.spinner("🔍 فحص صورة السيارة بموديل الرؤية..."):
+        with st.spinner("🔍 جارٍ تحليل ملامح الهيكل بواسطة Vision Transformer..."):
             detected_car = classify_car_image(view_img)
             if detected_car:
-                st.info(f"تم التعرف على السيارة من الصورة: **{detected_car}**")
+                st.markdown(f"""
+                <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; color: #38bdf8; font-weight: 600; text-align: center;">
+                    🚗 تم استنتاج السيارة من الصورة بنجاح: <strong>{detected_car}</strong>
+                </div>
+                """, unsafe_allow_html=True)
 
     combined_q = f"{detected_car} {query_input}".strip()
 
-    with st.spinner("🌐 سحب أحدث الإعلانات الحية وحساب السعر العادل..."):
+    with st.spinner("🌐 جارٍ استدعاء أحدث عروض السوق اللحظي وتقييمها بـ CatBoost..."):
         results_data, is_relaxed, notice_str = hybrid_search(user_query=combined_q, top_k=8)
 
     rendered_cards = generate_user_search_html(combined_q, results_data, is_relaxed, notice_str)
-    c_height = max(380, len(results_data) * 270 + 200)
+    c_height = max(400, len(results_data) * 320 + 200)
     components.html(rendered_cards, height=c_height, scrolling=True)
