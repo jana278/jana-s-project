@@ -1,4 +1,6 @@
 torch
+torchvision
+timm
 transformers
 pillow
 catboost
