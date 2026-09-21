@@ -32,6 +32,10 @@ st.markdown("""
         max-width: 900px !important;
         margin: auto;
     }
+    div[data-testid="stForm"] {
+        border: none !important;
+        padding: 0 !important;
+    }
     .stTextInput > div > div > input {
         background-color: #ffffff !important;
         color: #0f172a !important;
@@ -158,16 +162,18 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-c1, c2 = st.columns([1, 2], gap="medium")
-with c1:
-    up_img = st.file_uploader("📷 صورة السيارة (اختياري)", type=["jpg", "png", "jpeg"])
-    if up_img:
-        im = Image.open(up_img)
-        st.image(im, use_container_width=True)
+# استخدام Form لدعم الضغط على Enter مباشرة
+with st.form("search_form", clear_on_submit=False):
+    c1, c2 = st.columns([1, 2], gap="medium")
+    with c1:
+        up_img = st.file_uploader("📷 صورة السيارة (اختياري)", type=["jpg", "png", "jpeg"])
+        if up_img:
+            im = Image.open(up_img)
+            st.image(im, use_container_width=True)
 
-with c2:
-    q_txt = st.text_input("💬 اكتبي طلبك (ماركة / مواصفات / ميزانية):", value="كيا سبورتاج فابريكا في التجمع")
-    btn = st.button("🚀 بدء البحث والتسعير", use_container_width=True)
+    with c2:
+        q_txt = st.text_input("💬 اكتبي طلبك واضغطي Enter للبحث فوراً:", value="كيا سبورتاج فابريكا في التجمع")
+        btn = st.form_submit_button("🚀 بدء البحث والتسعير (أو اضغطي Enter)", use_container_width=True)
 
 if btn:
     det_car = ""
