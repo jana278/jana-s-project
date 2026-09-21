@@ -83,59 +83,43 @@ html, body, [data-testid="stAppViewContainer"] {{
     position: relative;
     z-index: 2;
     max-width: 1100px;
-    padding-top: 1.5rem;
+    padding-top: 2rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Hero Header */
+/* Hero Header & Rectangles Design */
 .hero-box {{
     text-align: center;
-    margin: 15px auto 30px auto;
+    margin: 10px auto 35px auto;
     position: relative;
     z-index: 2;
 }}
-.hero-kicker {{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
-    margin-bottom: 12px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 999px;
-    background: rgba(14, 165, 233, 0.1);
-    color: #38bdf8;
-    font-size: .75rem;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    backdrop-filter: blur(10px);
-}}
 .hero-title {{
     margin: 0;
-    color: #fff;
-    font-size: clamp(2.4rem, 4vw, 3.8rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: clamp(2.6rem, 4.5vw, 4.2rem);
     font-weight: 800;
     letter-spacing: -1.5px;
 }}
-.hero-title span {{
-    color: var(--neon-blue);
-    text-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+.rect-apex {{
+    background: #38bdf8;
+    color: #030712;
+    padding: 4px 22px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
 }}
-.hero-subtitle {{
-    color: #94a3b8;
-    font-size: 0.95rem;
-    max-width: 580px;
-    margin: 10px auto 0 auto;
-    line-height: 1.6;
-}}
-.hero-line {{
-    width: 50px;
-    height: 3px;
-    background: var(--neon-blue);
-    border-radius: 99px;
-    margin: 14px auto 0 auto;
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+.rect-motors {{
+    background: #0f172a;
+    color: #f8fafc;
+    border: 2px solid #38bdf8;
+    padding: 4px 22px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }}
 
 /* شريط البحث الموحد (Glassmorphism & Neon Blue) */
@@ -202,6 +186,11 @@ div[data-testid="stFileUploader"] button:before {{
     font-size: 1.3rem;
 }}
 div[data-testid="stFileUploader"] button span, div[data-testid="stFileUploader"] button p, div[data-testid="stFileUploaderFile"] {{
+    display: none !important;
+}}
+
+/* إخفاء زر الـ submit البارز تماماً الاعتماد على الـ Enter */
+div[data-testid="stFormSubmitButton"] {{
     display: none !important;
 }}
 
@@ -431,14 +420,14 @@ def hybrid_search(user_query: str = "", top_k: int = 8):
     return add_valuation_columns(sorted_df)
 
 # ------------------------------------------------------------------------------
-# 4. UI Layout & Search Bar
+# 4. UI Layout & Enter-to-Search Hub
 # ------------------------------------------------------------------------------
 st.markdown("""
 <div class="hero-box">
-    <div class="hero-kicker">✦ AI AUTOMOTIVE INTELLIGENCE</div>
-    <h1 class="hero-title">Apex <span>Motors</span></h1>
-    <div class="hero-line"></div>
-    <div class="hero-subtitle">سحب أحدث إعلانات السوق، الفحص الذكي بالرؤية الحاسوبية، والتقدير العادل بـ CatBoost</div>
+    <h1 class="hero-title">
+        <span class="rect-apex">Apex</span>
+        <span class="rect-motors">Motors</span>
+    </h1>
 </div>
 """, unsafe_allow_html=True)
 
@@ -451,6 +440,7 @@ with c_search:
         with c_up:
             uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
         
+        # تنفيذ تلقائي عند الضغط على Enter داخل النموذج
         submitted = st.form_submit_button("Search", use_container_width=True)
 
 # ------------------------------------------------------------------------------
@@ -518,7 +508,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
             """, unsafe_allow_html=True)
 else:
     st.markdown("""
-    <div style="text-align: center; color: #8b929a; margin-top: 40px;">
-        <p style="font-size: 0.95rem;">اكتبي طلبك في شريط البحث بالأعلى واضغطي <strong>Enter</strong>، أو اضغطي على أيقونة الكاميرا 📷 لفحص صورة سيارة</p>
+    <div style="text-align: center; color: #8b929a; margin-top: 50px;">
+        <p style="font-size: 0.95rem;">اكتبي طلبك في شريط البحث بالأعلى واضغطي <strong>Enter</strong> للبحث الفوري، أو اضغطي أيقونة الكاميرا 📷 لرفع صورة السيارة</p>
     </div>
     """, unsafe_allow_html=True)
