@@ -14,16 +14,16 @@ from bs4 import BeautifulSoup
 from PIL import Image
 import joblib
 import torch
-from catboost import CatBoostRegressor, Pool
+from catboost import Pool
 import streamlit as st
 import streamlit.components.v1 as components
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 # ------------------------------------------------------------------------------
-# 1. Page Config & CSS Cleanup
+# 1. Page Configuration & Clean Minimal Light Styling
 # ------------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Apex Motors • AI Automotive Intelligence",
+    page_title="Apex Motors • تداول وتسعير السيارات الذكي",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -31,95 +31,69 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+    
     #MainMenu, header, footer {visibility: hidden !important; display: none !important;}
+    
+    .stApp {
+        background-color: #f8fafc !important;
+        font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif !important;
+        color: #0f172a !important;
+    }
+    
     .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 2rem !important;
-        max-width: 1000px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+        max-width: 960px !important;
         margin: auto;
+    }
+
+    /* حقل الإدخال النصي */
+    .stTextInput > div > div > input {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 12px 16px !important;
+        font-size: 15px !important;
+        direction: rtl !important;
+        text-align: right !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* منطقة رفع الصورة */
+    .stFileUploader section {
+        background-color: #ffffff !important;
+        border: 1.5px dashed #94a3b8 !important;
+        border-radius: 10px !important;
+        padding: 8px !important;
+    }
+
+    /* زر البحث الرئيسي */
+    .stButton > button {
+        background: #2563eb !important;
+        color: #ffffff !important;
+        font-family: 'Tajawal', sans-serif !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 24px !important;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+        transition: background-color 0.2s ease !important;
+    }
+    .stButton > button:hover {
+        background: #1d4ed8 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# 2. Hardware Discovery & Seeding (Cell 1)
-# ------------------------------------------------------------------------------
-SEED = 42
-random.seed(SEED)
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(SEED)
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
-# ------------------------------------------------------------------------------
-# 3. Egyptian Market Domain Phenotype Extraction & Functions (Cell 2 & 7)
-# ------------------------------------------------------------------------------
-def extract_egyptian_condition_tag(text: str) -> str:
-    if any(keyword in text for keyword in ["فابريك", "فبريك", "وكالة", "بدون جرام", "زيرو", "بحالة المصنع"]):
-        return "Fabrika"
-    elif any(keyword in text for keyword in ["راشة حزام", "رش حزام", "حزام نظافة", "نظافة خارجي"]):
-        return "Belt_Repaint"
-    elif any(keyword in text for keyword in ["دواخل", "مرمات", "حادث", "مغير رفرف"]):
-        return "Accident_Repaired"
-    return "Normal"
-
-def extract_egyptian_trim_tier(text: str) -> str:
-    if any(keyword in text for keyword in ["اعلى فئة", "أعلى فئة", "topline", "top line", "بانوراما", "كاملة"]):
-        return "Topline"
-    elif any(keyword in text for keyword in ["هاي لاين", "highline", "high line", "فئة ثانية"]):
-        return "Highline"
-    elif any(keyword in text for keyword in ["بيز لاين", "baseline", "فئة اولى", "فاضية", "عادي"]):
-        return "Baseline"
-    return "Standard"
-
-BODY_SYNONYMS = {"suv": "SUV", "دفع رباعي": "SUV", "جيب": "SUV", "sedan": "Sedan", "سيدان": "Sedan", "hatchback": "Hatchback", "هاتشباك": "Hatchback"}
-TRANS_SYNONYMS = {"automatic": "Automatic", "اوتوماتيك": "Automatic", "أوتوماتيك": "Automatic", "auto": "Automatic", "manual": "Manual", "مانيوال": "Manual"}
-FUEL_SYNONYMS = {"بنزين": "Benzine", "gas": "Benzine", "كهرباء": "Electric", "electric": "Electric", "هايبرد": "Hybrid"}
-PAINT_SYNONYMS = {"فابريكا": "Fabrika", "فبريكة": "Fabrika", "وكالة": "Fabrika", "رش حزام": "Belt_Repaint", "راشة حزام": "Belt_Repaint"}
-TRIM_SYNONYMS = {"اعلى فئة": "Topline", "topline": "Topline", "بانوراما": "Topline", "هاي لاين": "Highline", "highline": "Highline"}
-
-CITY_MAP = {
-    "القاهرة": "cairo", "cairo": "cairo", "التجمع": "tagamo3", "tagamo3": "tagamo3",
-    "اسكندرية": "alexandria", "alexandria": "alexandria", "الجيزة": "giza", "زايد": "zayed"
-}
-
-def normalize_arabic(text: str) -> str:
-    if not isinstance(text, str): return ""
-    t = unicodedata.normalize("NFKC", text.lower().strip())
-    t = re.sub(r"[إأآا]", "ا", t)
-    t = re.sub(r"ة\b", "ه", t)
-    t = re.sub(r"ى\b", "ي", t)
-    t = t.replace("ونص", ".5").replace("وربع", ".25").replace("وتلت", ".33")
-    t = t.replace("باكو", " الف").replace("ارنب", " مليون").replace("أرنب", " مليون")
-    return t
-
-def extract_budget(text: str):
-    def scale(val, unit):
-        if not unit: return val if val >= 10000 else val * 1_000_000
-        u = unit.lower()
-        if u in ("m", "مليون"): return val * 1_000_000
-        if u in ("k", "الف", "ألف"): return val * 1_000
-        return val
-
-    m = re.search(r'(?:من\s*)?(\d+(?:\.\d+)?)\s*(m|مليون|k|الف)?\s*(?:-|to|حتى|لحد|الى|لـ)\s*(\d+(?:\.\d+)?)\s*(m|مليون|k|الف)?', text)
-    if m:
-        u_fin = m.group(4) or m.group(2)
-        return min(scale(float(m.group(1)), u_fin), scale(float(m.group(3)), u_fin)), max(scale(float(m.group(1)), u_fin), scale(float(m.group(3)), u_fin))
-
-    m = re.search(r'(?:تحت|اقل من|حتى|في حدود|سقف)\s*(\d+(?:\.\d+)?)\s*(m|مليون|k|الف)?', text)
-    if m:
-        return None, scale(float(m.group(1)), m.group(2))
-
-    m = re.search(r'(?:بـ|ب|معايا)\s*(\d+(?:\.\d+)?)\s*(m|مليون|k|الف)', text)
-    if m:
-        v = scale(float(m.group(1)), m.group(2))
-        return v * 0.85, v * 1.15
-    return None, None
-
-# ------------------------------------------------------------------------------
-# 4. Production Model Wrapper (Cell 6)
+# 2. Production Model Wrapper (CatBoost)
 # ------------------------------------------------------------------------------
 class ApexProductionValuationEngine:
     def __init__(self, model, num_cols, cat_cols, medians):
@@ -138,8 +112,9 @@ class ApexProductionValuationEngine:
         return self.model.predict(pool)
 
 # ------------------------------------------------------------------------------
-# 5. Load Vision Engine & Valuation Pipeline
+# 3. Model Loading
 # ------------------------------------------------------------------------------
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 VISION_MODEL = "dima806/car_models_image_detection"
 
 @st.cache_resource(show_spinner=False)
@@ -161,51 +136,32 @@ def load_components():
 img_processor, car_vision_model, full_pricing_pipeline, df_recommend = load_components()
 
 # ------------------------------------------------------------------------------
-# 6. ViT Vision Classifier (Cell 8)
+# 4. ViT Vision Classifier
 # ------------------------------------------------------------------------------
 BRAND_RENAME = {
-    "mercedes-benz": "mercedes",
-    "vw": "volkswagen",
-    "chevy": "chevrolet",
-    "alfa-romeo": "alfa romeo",
-    "land-rover": "land rover",
-    "aston-martin": "aston martin"
+    "mercedes-benz": "mercedes", "vw": "volkswagen", "chevy": "chevrolet",
+    "alfa-romeo": "alfa romeo", "land-rover": "land rover", "aston-martin": "aston martin"
 }
+KNOWN_MULTIWORD_BRANDS = ["alfa romeo", "land rover", "aston martin", "mercedes benz", "rolls royce"]
 
-KNOWN_MULTIWORD_BRANDS = [
-    "alfa romeo", "land rover", "aston martin", "mercedes benz", "rolls royce"
-]
-
-def predict_top5_cars_from_image(image_input, top_k: int = 5):
-    if car_vision_model is None or img_processor is None:
-        return []
-
+def classify_car_image(image_input) -> str:
     try:
         if isinstance(image_input, Image.Image):
             image = image_input.convert("RGB")
-        elif isinstance(image_input, (str, Path)):
-            if not os.path.exists(str(image_input)):
-                return []
-            image = Image.open(str(image_input)).convert("RGB")
         else:
             image = Image.open(image_input).convert("RGB")
 
         inputs = img_processor(images=image, return_tensors="pt").to(DEVICE)
-
         with torch.inference_mode():
             logits = car_vision_model(**inputs).logits
             probs = torch.nn.functional.softmax(logits, dim=-1)[0]
 
-        top_k_val = min(top_k, len(car_vision_model.config.id2label))
-        top_probs, top_indices = torch.topk(probs, k=top_k_val)
-
+        top_probs, top_indices = torch.topk(probs, k=5)
         candidates = []
         for p, idx in zip(top_probs, top_indices):
             raw_label = car_vision_model.config.id2label[idx.item()].replace("_", " ").strip()
             label_lower = raw_label.lower()
-
-            detected_brand = None
-            detected_model = ""
+            detected_brand, detected_model = None, ""
 
             for mb in KNOWN_MULTIWORD_BRANDS:
                 if label_lower.startswith(mb):
@@ -219,44 +175,23 @@ def predict_top5_cars_from_image(image_input, top_k: int = 5):
                 detected_brand = BRAND_RENAME.get(first_token, first_token)
                 detected_model = " ".join(tokens[1:]) if len(tokens) > 1 else raw_label
 
-            candidates.append({
-                "label": raw_label,
-                "confidence": round(float(p.item()) * 100, 2),
-                "brand": detected_brand.capitalize(),
-                "model": detected_model.capitalize()
-            })
+            candidates.append({"brand": detected_brand.capitalize(), "model": detected_model.capitalize()})
 
-        return candidates
+        selected_brand = candidates[0]['brand']
+        selected_model = candidates[0]['model']
+        clean_model = re.sub(r"\b(class|series|sedan|suv|coupe)\b", "", selected_model, flags=re.IGNORECASE).strip()
+        return f"{selected_brand} {clean_model}".strip()
     except Exception:
-        return []
-
-def classify_car_image(image_input) -> str:
-    candidates = predict_top5_cars_from_image(image_input, top_k=5)
-    if not candidates:
         return ""
 
-    labels_combined = " ".join([c['label'].lower() for c in candidates])
-    selected_brand = candidates[0]['brand']
-    selected_model = candidates[0]['model']
-
-    if any(k in labels_combined for k in ["subaru", "brz", "toyota", "gr86", "gt86", "86"]):
-        for c in candidates:
-            if any(k in c['label'].lower() for k in ["subaru", "brz", "toyota", "gr86", "gt86", "86"]):
-                selected_brand = c['brand']
-                selected_model = c['model']
-                break
-
-    clean_model = re.sub(r"\b(class|series|sedan|suv|coupe)\b", "", selected_model, flags=re.IGNORECASE).strip()
-    return f"{selected_brand} {clean_model}".strip()
-
 # ------------------------------------------------------------------------------
-# 7. Scraper Engine (Hatla2ee + OLX/Dubizzle) (Cell 9)
+# 5. Dual Platform Scraper
 # ------------------------------------------------------------------------------
 class DualPlatformMarketScraper:
     def __init__(self):
         self.session = requests.Session()
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
             "Accept-Language": "ar,en-US;q=0.9,en;q=0.8"
         }
 
@@ -273,8 +208,7 @@ class DualPlatformMarketScraper:
             resp = self.session.get(url, headers=self.headers, timeout=8)
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.content, "html.parser")
-                items = soup.select(".listing-item, .listing-body, .car-list-item")
-                for it in items:
+                for it in soup.select(".listing-item, .listing-body, .car-list-item"):
                     t_el = it.select_one(".listing-title, h2 a, .carTitle a")
                     p_el = it.select_one(".listing-price, .price, .carPrice")
                     loc_el = it.select_one(".listing-location, .location, .city")
@@ -286,8 +220,6 @@ class DualPlatformMarketScraper:
 
                     y_match = re.search(r"\b(19\d{2}|20\d{2})\b", title)
                     year = int(y_match.group(1)) if y_match else 2024
-                    loc_name = loc_el.text.strip() if loc_el else "Cairo"
-
                     link = t_el.get("href", "")
                     full_link = f"https://eg.hatla2ee.com{link}" if link.startswith("/") else link
 
@@ -298,10 +230,10 @@ class DualPlatformMarketScraper:
                         "price": float(raw_p),
                         "year": year,
                         "mileage": 30000.0,
-                        "location": loc_name,
+                        "location": loc_el.text.strip() if loc_el else "Cairo",
                         "transmission": "Automatic",
                         "condition_tag": "Fabrika" if any(k in title for k in ["فابريك", "فبريك", "وكالة", "زيرو"]) else "Normal",
-                        "trim_tier": "Topline" if any(k in title for k in ["اعلى فئة", "توب لاين", "topline", "بانوراما"]) else "Highline",
+                        "trim_tier": "Topline" if any(k in title for k in ["اعلى فئة", "بانوراما", "توب لاين"]) else "Highline",
                         "source": "Hatla2ee",
                         "item_url": full_link
                     })
@@ -327,26 +259,23 @@ class DualPlatformMarketScraper:
                         raw_ads = payload.get("props", {}).get("pageProps", {}).get("initialState", {}).get("feed", {}).get("data", [])
                         for item in raw_ads:
                             title = (item.get("title") or item.get("name") or "").strip()
-                            t_lower = title.lower()
-                            if target_b not in t_lower: continue
+                            if target_b not in title.lower(): continue
 
                             price_val = item.get("price", {}).get("value")
                             if not price_val: continue
 
-                            loc_name = item.get("location", {}).get("name", "Cairo")
                             ad_id = item.get("id", "")
                             ad_url = f"https://www.dubizzle.com.eg/ad/{ad_id}" if ad_id else search_url
                             y_match = re.search(r"\b(19\d{2}|20\d{2})\b", title)
-                            year = int(y_match.group(1)) if y_match else 2024
 
                             records.append({
                                 "name": title,
                                 "brand": brand.capitalize(),
                                 "model": model.capitalize() if model else "Model",
                                 "price": float(price_val),
-                                "year": year,
+                                "year": int(y_match.group(1)) if y_match else 2024,
                                 "mileage": 35000.0,
-                                "location": loc_name,
+                                "location": item.get("location", {}).get("name", "Cairo"),
                                 "transmission": "Automatic",
                                 "condition_tag": "Fabrika" if any(k in title for k in ["فابريك", "فبريك", "وكالة", "زيرو"]) else "Normal",
                                 "trim_tier": "Topline",
@@ -362,7 +291,7 @@ class DualPlatformMarketScraper:
 live_engine = DualPlatformMarketScraper()
 
 # ------------------------------------------------------------------------------
-# 8. Valuation Enrichment (Cell 9)
+# 6. Fair Market Valuation
 # ------------------------------------------------------------------------------
 def add_valuation_columns(results_df: pd.DataFrame) -> pd.DataFrame:
     if results_df.empty: return results_df
@@ -373,7 +302,7 @@ def add_valuation_columns(results_df: pd.DataFrame) -> pd.DataFrame:
             pred_log = full_pricing_pipeline.predict(results_df)
             results_df["predicted_fair_price"] = np.expm1(pred_log).round(0)
         except Exception:
-            results_df["predicted_fair_price"] = (results_df["price"] * np.random.uniform(0.97, 1.03)).round(0)
+            results_df["predicted_fair_price"] = (results_df["price"] * 0.98).round(0)
     else:
         results_df["predicted_fair_price"] = (results_df["price"] * 0.98).round(0)
 
@@ -382,81 +311,57 @@ def add_valuation_columns(results_df: pd.DataFrame) -> pd.DataFrame:
 
     results_df["deal_label"] = np.select(
         [pct_deviation <= -0.05, pct_deviation >= 0.08],
-        ["Great Deal 🔥", "Overpriced ⚠️"],
-        default="Fair Market Price ⚖️"
+        ["صفقة ممتازة 🔥", "أعلى من سعر السوق ⚠️"],
+        default="سعر عادل ومناسب ⚖️"
     )
 
     def generate_explanation(row):
-        parts = [f"Listed at {row['price']:,.0f} EGP vs estimated fair value of {row['predicted_fair_price']:,.0f} EGP ({row['deal_label']})."]
+        parts = [f"السعر المعروض {row['price']:,.0f} ج.م مقارنة بالقيمة العادلة المقدرة {row['predicted_fair_price']:,.0f} ج.م."]
         if row.get("condition_tag") == "Fabrika": parts.append("فابريكا بالكامل.")
         if row.get("trim_tier") in ("Topline", "Highline"): parts.append(f"الفئة: {row['trim_tier']}.")
         if pd.notna(row.get("location")): parts.append(f"المكان: {str(row['location']).title()}.")
-        if pd.notna(row.get("source")): parts.append(f"المصدر: {row['source']}.")
         return " ".join(parts)
 
     results_df["explanation"] = results_df.apply(generate_explanation, axis=1)
     return results_df
 
 # ------------------------------------------------------------------------------
-# 9. Hybrid Search Core (Cell 9)
+# 7. Hybrid Search Core
 # ------------------------------------------------------------------------------
 def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8):
     sub_df = df_recommend.copy() if not df_recommend.empty else pd.DataFrame()
 
     ARABIC_TO_ENG_BRAND = {
-        "كيا": "kia", "kia": "kia",
-        "هيونداي": "hyundai", "hyundai": "hyundai",
-        "نيسان": "nissan", "nissan": "nissan",
-        "مرسيدس": "mercedes", "mercedes": "mercedes",
-        "تويوتا": "toyota", "toyota": "toyota",
-        "ام جي": "mg", "mg": "mg",
-        "سوبارو": "subaru", "subaru": "subaru",
-        "بورش": "porsche", "بورشه": "porsche", "porsche": "porsche",
-        "بي ام دبليو": "bmw", "bmw": "bmw",
-        "أوبل": "opel", "اوبل": "opel", "opel": "opel",
-        "رينو": "renault", "renault": "renault"
+        "كيا": "kia", "kia": "kia", "هيونداي": "hyundai", "hyundai": "hyundai",
+        "نيسان": "nissan", "nissan": "nissan", "مرسيدس": "mercedes", "mercedes": "mercedes",
+        "تويوتا": "toyota", "toyota": "toyota", "ام جي": "mg", "mg": "mg",
+        "بي ام دبليو": "bmw", "bmw": "bmw", "رينو": "renault", "renault": "renault"
     }
-
     MODEL_ARABIC_MAP = {
-        "سبورتاج": "sportage", "sportage": "sportage",
-        "النترا": "elantra", "elantra": "elantra",
-        "صني": "sunny", "sunny": "sunny",
-        "توسان": "tucson", "tucson": "tucson",
-        "كورولا": "corolla", "corolla": "corolla",
-        "سي ال ايه": "cla", "cla": "cla",
-        "سي 180": "c180", "c180": "c180", "c 180": "c180",
-        "بي ار زد": "brz", "brz": "brz",
-        "911": "911"
+        "سبورتاج": "sportage", "sportage": "sportage", "النترا": "elantra", "elantra": "elantra",
+        "صني": "sunny", "sunny": "sunny", "توسان": "tucson", "tucson": "tucson",
+        "كورولا": "corolla", "corolla": "corolla", "سي ال ايه": "cla", "cla": "cla",
+        "سي 180": "c180", "c180": "c180"
     }
-
     LOCATION_MAP = {
-        "تجمع": "Tagamo3", "التجمع": "Tagamo3", "القاهرة الجديدة": "New Cairo",
-        "مدينة نصر": "Nasr City", "مصر الجديدة": "Heliopolis", "المعادي": "Maadi",
-        "زايد": "Sheikh Zayed", "الشيخ زايد": "Sheikh Zayed", "اكتوبر": "6th of October"
+        "تجمع": "Tagamo3", "التجمع": "Tagamo3", "زايد": "Sheikh Zayed", "الشيخ زايد": "Sheikh Zayed",
+        "معادي": "Maadi", "المعادي": "Maadi", "مدينة نصر": "Nasr City"
     }
 
-    detected_brand = None
-    detected_model = None
-    detected_location = None
+    detected_brand, detected_model, detected_location = None, None, None
     budget_target = None
     is_relaxed_match = False
     relaxation_notes = []
 
-    # 1. Image Check
     if uploaded_image:
-        try:
-            vision_label = classify_car_image(uploaded_image)
-            if vision_label:
-                parts = vision_label.split()
-                detected_brand = parts[0].lower()
-                detected_model = " ".join(parts[1:]).lower() if len(parts) > 1 else None
-        except Exception:
-            pass
+        vision_label = classify_car_image(uploaded_image)
+        if vision_label:
+            parts = vision_label.split()
+            detected_brand = parts[0].lower()
+            detected_model = " ".join(parts[1:]).lower() if len(parts) > 1 else None
 
-    # 2. Query Text Parsing
     if user_query and user_query.strip():
         q_clean = user_query.lower()
-
         for ar, en in ARABIC_TO_ENG_BRAND.items():
             if ar in q_clean: detected_brand = en; break
         for ar, en in MODEL_ARABIC_MAP.items():
@@ -472,21 +377,17 @@ def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8)
             if num_match:
                 budget_target = float(num_match.group(1))
 
-        # 3. Strict Lock filtering on local catalog
         if detected_brand and not sub_df.empty and "brand" in sub_df.columns:
             sub_df = sub_df[sub_df["brand"].astype(str).str.lower() == detected_brand]
         if detected_model and not sub_df.empty and "model" in sub_df.columns:
             sub_df = sub_df[sub_df["model"].astype(str).str.lower().str.contains(detected_model)]
 
-        # 4. Live Scraper Fallback
         if sub_df.empty or len(sub_df) < 2:
-            h_ads = live_engine.scrape_hatla2ee(detected_brand or "car", detected_model)
-            o_ads = live_engine.scrape_dubizzle_olx(detected_brand or "car", detected_model)
+            h_ads = live_engine.scrape_hatla2ee(detected_brand or "mercedes", detected_model)
+            o_ads = live_engine.scrape_dubizzle_olx(detected_brand or "mercedes", detected_model)
             combined = h_ads + o_ads
-            if combined:
-                sub_df = pd.DataFrame(combined)
+            if combined: sub_df = pd.DataFrame(combined)
 
-        # 5. Location Soft Relaxation
         if detected_location and not sub_df.empty:
             loc_matches = sub_df[sub_df["location"].astype(str).str.lower().str.contains(detected_location.lower())]
             if not loc_matches.empty:
@@ -494,16 +395,14 @@ def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8)
             else:
                 is_relaxed_match = True
                 car_tag = f"{detected_brand.capitalize() if detected_brand else ''} {detected_model.capitalize() if detected_model else ''}".strip()
-                relaxation_notes.append(f"لم تتوفر سيارات مطابقة في ({detected_location})، تم توسيع النطاق لأقرب سيارات {car_tag} بالقاهرة الكبرى.")
+                relaxation_notes.append(f"لم تتوفر سيارات مطابقة في ({detected_location})، تم عرض السيارات المتاحة في النطاق المجاور.")
 
-        # 6. Budget Soft Alignment
         if budget_target and not sub_df.empty:
             sub_df["price_dist"] = (sub_df["price"] - budget_target).abs()
             sub_df = sub_df.sort_values("price_dist", ascending=True)
-            min_price = sub_df["price"].min()
-            if min_price > budget_target * 1.25:
+            if sub_df["price"].min() > budget_target * 1.25:
                 is_relaxed_match = True
-                relaxation_notes.append(f"الميزانية المطلوبة ({budget_target:,.0f} EGP) أقل من أسعار السوق المتاحة لهذا الموديل، تم ترتيب الأقرب لميزانيتك.")
+                relaxation_notes.append(f"الميزانية المحددة ({budget_target:,.0f} ج.م) أقل من المعروض بالسوق، تم ترتيب الأقرب لها.")
 
     if sub_df.empty:
         return pd.DataFrame(), False, ""
@@ -521,106 +420,107 @@ def hybrid_search(user_query: str = None, uploaded_image = None, top_k: int = 8)
         scores.append(min(round(base + np.random.uniform(0.1, 0.9), 1), 99.5))
 
     sub_df["match_score"] = scores
-    sorted_df = sub_df.sort_values("match_score", ascending=False)
-    top_results = sorted_df.head(top_k) if top_k is not None else sorted_df
-    top_results = add_valuation_columns(top_results)
+    sorted_df = sub_df.sort_values("match_score", ascending=False).head(top_k)
+    top_results = add_valuation_columns(sorted_df)
 
-    full_notice = " • ".join(relaxation_notes)
-    return top_results, is_relaxed_match, full_notice
+    return top_results, is_relaxed_match, " • ".join(relaxation_notes)
 
 # ------------------------------------------------------------------------------
-# 10. Render Engine (HTML Cards from Cell 10)
+# 8. Clean Light Cards HTML Generator
 # ------------------------------------------------------------------------------
 def generate_user_search_html(query: str, results: pd.DataFrame, is_relaxed: bool, notice: str):
-    count_text = f"{len(results)} نتائج حية" if not results.empty else "0 نتائج"
+    count_text = f"{len(results)} نتائج" if not results.empty else "لا توجد نتائج"
 
     html_out = f"""
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 920px; margin: 10px auto; color: #1e293b;">
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 22px; border-radius: 12px; color: #fff; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.12);">
-            <div style="font-size: 13px; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 6px;">Apex Auto Intelligence • Dual-Source Live Engine</div>
-            <div style="font-size: 18px; font-weight: 600;">🔍 الاستعلام: <span style="color: #f8fafc; font-weight: 400;">"{query}"</span></div>
-            <div style="font-size: 13px; color: #94a3b8; margin-top: 8px;">تم العثور على {count_text} مطابقة عبر منصتي هتلاقي ودوبيزل (OLX)</div>
+    <div style="font-family: 'Tajawal', 'Segoe UI', sans-serif; max-width: 940px; margin: 15px auto; color: #0f172a;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+            <div>
+                <div style="font-size: 13px; color: #64748b; font-weight: 600;">نتائج البحث اللحظي من السوق</div>
+                <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 2px;">🔍 {query}</div>
+            </div>
+            <div style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                {count_text}
+            </div>
         </div>
     """
 
     if is_relaxed and notice:
         html_out += f"""
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; color: #92400e; font-size: 14px; font-weight: 500; direction: rtl; text-align: right;">
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 18px; margin-bottom: 18px; color: #b45309; font-size: 14px; font-weight: 500; text-align: right; direction: rtl;">
             ⚠️ <strong>تنويه:</strong> {notice}
         </div>
         """
 
     if results.empty:
         html_out += """
-        <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 20px; color: #991b1b; text-align: center;">
-            ⚠️ لم يتم العثور على سيارات مطابقة للماركة المطلوبة.
+        <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 10px; padding: 25px; text-align: center; color: #b91c1c; font-size: 15px;">
+            لم يتم العثور على سيارات مطابقة للمعايير المحددة حالياً.
         </div></div>
         """
         return html_out
 
     for idx, (_, car) in enumerate(results.iterrows(), 1):
-        deal = str(car.get('deal_label', 'Fair Market Price'))
+        deal = str(car.get('deal_label', 'سعر عادل'))
         badge_bg, badge_border, badge_color = (
-            ("#ecfdf5", "#a7f3d0", "#065f46") if "Great Deal" in deal or "🔥" in deal 
-            else (("#fef2f2", "#fecaca", "#991b1b") if "Overpriced" in deal or "⚠️" in deal 
-            else ("#f0fdf4", "#bbf7d0", "#166534"))
+            ("#f0fdf4", "#bbf7d0", "#166534") if "ممتازة" in deal or "🔥" in deal 
+            else (("#fef2f2", "#fecaca", "#991b1b") if "أعلى" in deal or "⚠️" in deal 
+            else ("#eff6ff", "#bfdbfe", "#1d4ed8"))
         )
 
         diff = car.get('price_difference', 0)
-        diff_text = f"{abs(diff):,.0f} EGP {'أقل من القيمة التقديرية' if diff <= 0 else 'أعلى من القيمة التقديرية'}"
+        diff_text = f"{abs(diff):,.0f} ج.م {'أقل من السعر المقدر' if diff <= 0 else 'أعلى من السعر المقدر'}"
         source_name = car.get("source", "Hatla2ee")
-        btn_bg = "#dc2626" if "OLX" in source_name or "Dubizzle" in source_name else "#2563eb"
 
         html_out += f"""
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 14px;">
                 <div>
-                    <span style="font-size: 20px; font-weight: 700; color: #0f172a;">#{idx} {car.get('name', f"{car.get('brand')} {car.get('model')}")}</span>
-                    <div style="margin-top: 5px;">
-                        <span style="background: #e2e8f0; color: #334155; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">{source_name}</span>
-                        <span style="background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px;">دقة التطابق: {car.get('match_score', 0):.1f}%</span>
+                    <div style="font-size: 19px; font-weight: 700; color: #0f172a;">#{idx} {car.get('name', f"{car.get('brand')} {car.get('model')}")}</div>
+                    <div style="margin-top: 6px; display: flex; gap: 8px;">
+                        <span style="background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">{source_name}</span>
+                        <span style="background: #eff6ff; color: #2563eb; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">دقة التطابق: {car.get('match_score', 0):.1f}%</span>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 22px; font-weight: 800; color: #2563eb;">{car.get('price', 0):,.0f} <span style="font-size: 14px; font-weight: 600;">EGP</span></div>
-                    <div style="font-size: 12px; color: #64748b;">السعر المعروض</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #2563eb;">{car.get('price', 0):,.0f} <span style="font-size: 13px; font-weight: 600; color: #64748b;">ج.م</span></div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">السعر المعروض</div>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; direction: rtl; text-align: right;">
-                <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
-                    <div style="font-size: 11px; color: #64748b;">الموقع / المدينة</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #334155;">📍 {str(car.get('location', 'القاهرة')).title()}</div>
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
+                    <div style="font-size: 11px; color: #64748b;">المدينة / المنطقة</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">📍 {str(car.get('location', 'القاهرة')).title()}</div>
                 </div>
-                <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">حالة الدهان</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #334155;">🎨 {car.get('condition_tag', 'Normal')}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">🎨 {car.get('condition_tag', 'Normal')}</div>
                 </div>
-                <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">فئة التجهيز</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #334155;">⚡ {car.get('trim_tier', 'Standard')}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">⚡ {car.get('trim_tier', 'Standard')}</div>
                 </div>
-                <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #f1f5f9; padding: 8px 12px; border-radius: 8px;">
                     <div style="font-size: 11px; color: #64748b;">الناقل / الكيلومتر</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #334155;">⚙️ {car.get('transmission', 'Auto')} • {car.get('mileage', 0):,.0f} كم</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">⚙️ {car.get('transmission', 'Auto')} • {car.get('mileage', 0):,.0f} كم</div>
                 </div>
             </div>
 
-            <div style="background: {badge_bg}; border: 1px solid {badge_border}; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: {badge_bg}; border: 1px solid {badge_border}; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="display: inline-block; font-weight: 700; color: {badge_color}; font-size: 14px; margin-bottom: 2px;">{deal}</span>
-                    <div style="font-size: 13px; color: #334155;">{car.get('explanation', '')}</div>
+                    <span style="display: inline-block; font-weight: 700; color: {badge_color}; font-size: 14px;">{deal}</span>
+                    <div style="font-size: 13px; color: #334155; margin-top: 2px;">{car.get('explanation', '')}</div>
                 </div>
                 <div style="text-align: right; min-width: 170px;">
-                    <div style="font-size: 11px; color: #64748b;">السعر العادل (CatBoost AI):</div>
-                    <div style="font-size: 15px; font-weight: 700; color: #0f172a;">{car.get('predicted_fair_price', 0):,.0f} EGP</div>
+                    <div style="font-size: 11px; color: #64748b;">السعر العادل المقدر:</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #0f172a;">{car.get('predicted_fair_price', 0):,.0f} ج.م</div>
                     <div style="font-size: 11px; font-weight: 600; color: {badge_color};">({diff_text})</div>
                 </div>
             </div>
 
-            <div style="text-align: left; margin-top: 10px;">
-                <a href="{car.get('item_url', '#')}" target="_blank" style="display: inline-block; background: {btn_bg}; color: #ffffff; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                    🔗 فتح الإعلان على {source_name}
+            <div style="text-align: left;">
+                <a href="{car.get('item_url', '#')}" target="_blank" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                    🔗 فتح الإعلان الأصلي
                 </a>
             </div>
         </div>
@@ -630,38 +530,62 @@ def generate_user_search_html(query: str, results: pd.DataFrame, is_relaxed: boo
     return html_out
 
 # ------------------------------------------------------------------------------
-# 11. Streamlit Interactive App View
+# 9. Clean Header & Search Hub
 # ------------------------------------------------------------------------------
-st.title("Apex Motors • AI Automotive Market Intelligence")
-st.caption("نظام التقييم اللحظي وفحص صور السيارات المعتمد على CatBoost و Vision Transformers")
+st.markdown("""
+<div style="text-align: center; margin-bottom: 25px;">
+    <h1 style="font-size: 34px; font-weight: 800; color: #0f172a; margin: 0;">
+        Apex Motors • محرك تسعير وبحث السيارات
+    </h1>
+    <p style="color: #64748b; font-size: 15px; margin-top: 6px;">
+        فحص الصور بالذكاء الاصطناعي، سحب الإعلانات الحية من السوق، وتقدير السعر العادل
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 2], gap="medium")
+with st.container():
+    st.markdown("""
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 20px;">
+    """, unsafe_allow_html=True)
 
-with col1:
-    uploaded_file = st.file_uploader("📷 ارفعي صورة العربية هنا", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        view_img = Image.open(uploaded_file)
-        st.image(view_img, caption="Query Vehicle Image", use_container_width=True)
+    col1, col2 = st.columns([1, 2.2], gap="large")
 
-with col2:
-    query_input = st.text_input(
-        "💬 متطلبات البحث والمواصفات (بالعامية المصرية):",
-        value="فابريكا أعلى فئة في زايد بـ 800 الف"
-    )
-    search_triggered = st.button("🚀 تشغيل البحث والتقييم اللحظي", use_container_width=True)
+    with col1:
+        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;'>📷 فحص صورة السيارة (اختياري)</div>", unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Vehicle Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+        if uploaded_file:
+            view_img = Image.open(uploaded_file)
+            st.image(view_img, caption="الصورة المرفوعة", use_container_width=True)
 
+    with col2:
+        st.markdown("<div style='font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;'>💬 المواصفات والشروط والميزانية (بالعامية المصرية):</div>", unsafe_allow_html=True)
+        query_input = st.text_input(
+            "Query Text",
+            value="فابريكا أعلى فئة في زايد بـ 800 الف",
+            placeholder="اكتبي الماركة أو المواصفات مثل: كيا سبورتاج فابريكا في التجمع...",
+            label_visibility="collapsed"
+        )
+        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+        search_triggered = st.button("🚀 بدء البحث والتسعير اللحظي", use_container_width=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# 10. Execution Trigger
+# ------------------------------------------------------------------------------
 if search_triggered:
     detected_car = ""
     if uploaded_file:
-        with st.spinner("🔍 جارٍ فحص صورة السيارة بواسطة Vision Transformer..."):
+        with st.spinner("🔍 فحص صورة السيارة بموديل الرؤية..."):
             detected_car = classify_car_image(view_img)
-            st.info(f"السيارة المستنتجة من الصورة: **{detected_car}**")
+            if detected_car:
+                st.info(f"تم التعرف على السيارة من الصورة: **{detected_car}**")
 
     combined_q = f"{detected_car} {query_input}".strip()
 
-    with st.spinner("🌐 جارٍ فحص السوق اللحظي وحساب التسعير العادل..."):
+    with st.spinner("🌐 سحب أحدث الإعلانات الحية وحساب السعر العادل..."):
         results_data, is_relaxed, notice_str = hybrid_search(user_query=combined_q, top_k=8)
 
     rendered_cards = generate_user_search_html(combined_q, results_data, is_relaxed, notice_str)
-    c_height = max(400, len(results_data) * 315 + 220)
+    c_height = max(380, len(results_data) * 270 + 200)
     components.html(rendered_cards, height=c_height, scrolling=True)
