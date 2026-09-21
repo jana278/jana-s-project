@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------------------
-# 1. Background Image & Dark Cinematic Theme CSS (Symmetrical & Clean)
+# 1. Background Image & Dark Cinematic Theme CSS (Optimized Width & Symmetrical)
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def get_image_data(image_path="mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.jpg", mime="image/jpeg"):
@@ -82,17 +82,17 @@ html, body, [data-testid="stAppViewContainer"] {{
 .main .block-container {{
     position: relative;
     z-index: 2;
-    max-width: 1050px;
-    padding-top: 3.5rem;
+    max-width: 820px;
+    padding-top: 3rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Symmetrical Hero Header & Continuous Box */
+/* Perfectly Symmetrical & Balanced Brand Title */
 .hero-box {{
     text-align: center;
-    margin: 0 auto 50px auto;
+    margin: 0 auto 35px auto;
     position: relative;
     z-index: 2;
     display: flex;
@@ -101,31 +101,31 @@ html, body, [data-testid="stAppViewContainer"] {{
 .brand-container {{
     display: inline-flex;
     align-items: center;
-    background: rgba(15, 23, 42, 0.88);
-    border: 1.5px solid rgba(56, 189, 248, 0.35);
-    border-radius: 18px;
-    padding: 6px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.12);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.3px solid rgba(56, 189, 248, 0.35);
+    border-radius: 14px;
+    padding: 4px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.12);
     backdrop-filter: blur(14px);
 }}
 .brand-apex {{
     background: #38bdf8;
     color: #030712;
-    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    font-size: 1.8rem;
     font-weight: 800;
-    padding: 10px 28px;
-    border-radius: 12px;
-    letter-spacing: -1px;
+    padding: 8px 22px;
+    border-radius: 10px;
+    letter-spacing: -0.5px;
 }}
 .brand-motors {{
     color: #ffffff;
-    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    font-size: 1.8rem;
     font-weight: 800;
-    padding: 10px 28px;
-    letter-spacing: -1px;
+    padding: 8px 22px;
+    letter-spacing: -0.5px;
 }}
 
-/* Search Bar (Centered, Symmetrical, Lower Position) */
+/* Search Bar (Balanced Width & Lower Position) */
 div[data-testid="stHorizontalBlock"] {{
     background: transparent !important;
     border: none !important;
@@ -139,7 +139,7 @@ div[data-testid="stHorizontalBlock"]:has(input) {{
     backdrop-filter: blur(18px) !important;
     padding: 0 16px 0 24px !important;
     align-items: center !important;
-    height: 58px !important;
+    height: 56px !important;
     max-width: 820px !important;
     margin: 0 auto !important;
 }}
@@ -150,7 +150,7 @@ div[data-testid="stTextInput"], div[data-testid="stTextInput"] * {{
     box-shadow: none !important;
     outline: none !important;
     color: #ffffff !important;
-    font-size: 0.98rem !important;
+    font-size: 0.95rem !important;
     direction: ltr !important;
     text-align: left !important;
 }}
@@ -190,7 +190,7 @@ div[data-testid="stFileUploader"] button:hover {{
 }}
 div[data-testid="stFileUploader"] button:before {{
     content: "📷";
-    font-size: 1.35rem;
+    font-size: 1.3rem;
 }}
 div[data-testid="stFileUploader"] button span, div[data-testid="stFileUploader"] button p, div[data-testid="stFileUploaderFile"] {{
     display: none !important;
