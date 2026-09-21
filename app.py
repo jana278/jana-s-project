@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------------------
-# 1. Background Image & Dark Cinematic Theme CSS
+# 1. Background Image & Dark Cinematic Theme CSS (Symmetrical & Clean)
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def get_image_data(image_path="mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.jpg", mime="image/jpeg"):
@@ -82,62 +82,66 @@ html, body, [data-testid="stAppViewContainer"] {{
 .main .block-container {{
     position: relative;
     z-index: 2;
-    max-width: 1100px;
-    padding-top: 4rem;
+    max-width: 1050px;
+    padding-top: 3.5rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Hero Header & Big Continuous Rectangle Title */
+/* Symmetrical Hero Header & Continuous Box */
 .hero-box {{
     text-align: center;
-    margin: 10px auto 45px auto;
+    margin: 0 auto 50px auto;
     position: relative;
     z-index: 2;
+    display: flex;
+    justify-content: center;
 }}
 .brand-container {{
     display: inline-flex;
     align-items: center;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1.5px solid rgba(56, 189, 248, 0.4);
-    border-radius: 16px;
-    padding: 8px 10px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15);
-    backdrop-filter: blur(12px);
+    background: rgba(15, 23, 42, 0.88);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border-radius: 18px;
+    padding: 6px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.12);
+    backdrop-filter: blur(14px);
 }}
 .brand-apex {{
     background: #38bdf8;
     color: #030712;
-    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
     font-weight: 800;
-    padding: 8px 24px;
-    border-radius: 10px;
+    padding: 10px 28px;
+    border-radius: 12px;
     letter-spacing: -1px;
 }}
 .brand-motors {{
     color: #ffffff;
-    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
     font-weight: 800;
-    padding: 8px 24px;
+    padding: 10px 28px;
     letter-spacing: -1px;
 }}
 
-/* شريط البحث الموحد (مرفوع للأعلى نسبياً وبشكل أنيق) */
+/* Search Bar (Centered, Symmetrical, Lower Position) */
 div[data-testid="stHorizontalBlock"] {{
     background: transparent !important;
     border: none !important;
 }}
 
 div[data-testid="stHorizontalBlock"]:has(input) {{
-    background: rgba(15, 23, 42, 0.85) !important;
-    border: 1.2px solid rgba(56, 189, 248, 0.35) !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+    border: 1.3px solid rgba(56, 189, 248, 0.4) !important;
     border-radius: 999px !important;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(56, 189, 248, 0.2) !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(56, 189, 248, 0.25) !important;
     backdrop-filter: blur(18px) !important;
     padding: 0 16px 0 24px !important;
     align-items: center !important;
-    height: 56px !important;
+    height: 58px !important;
+    max-width: 820px !important;
+    margin: 0 auto !important;
 }}
 
 div[data-testid="stTextInput"], div[data-testid="stTextInput"] * {{
@@ -146,7 +150,7 @@ div[data-testid="stTextInput"], div[data-testid="stTextInput"] * {{
     box-shadow: none !important;
     outline: none !important;
     color: #ffffff !important;
-    font-size: 0.95rem !important;
+    font-size: 0.98rem !important;
     direction: ltr !important;
     text-align: left !important;
 }}
@@ -186,7 +190,7 @@ div[data-testid="stFileUploader"] button:hover {{
 }}
 div[data-testid="stFileUploader"] button:before {{
     content: "📷";
-    font-size: 1.3rem;
+    font-size: 1.35rem;
 }}
 div[data-testid="stFileUploader"] button span, div[data-testid="stFileUploader"] button p, div[data-testid="stFileUploaderFile"] {{
     display: none !important;
@@ -198,7 +202,7 @@ div[data-testid="stFormSubmitButton"] {{
 
 /* Cards & Badges */
 .car-card {{
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.88);
     border: 1px solid rgba(255,255,255,.1);
     border-radius: 16px;
     padding: 20px;
@@ -209,7 +213,7 @@ div[data-testid="stFormSubmitButton"] {{
     transition: all 0.2s ease;
 }}
 .car-card:hover {{
-    border-color: rgba(56, 189, 248, 0.3);
+    border-color: rgba(56, 189, 248, 0.35);
     transform: translateY(-2px);
 }}
 .deal-badge-great {{
@@ -432,16 +436,14 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-_, c_search, _ = st.columns([1, 2.6, 1])
-with c_search:
-    with st.form("search_form", clear_on_submit=False):
-        c_in, c_up = st.columns([0.91, 0.09])
-        with c_in:
-            user_query = st.text_input("Search", placeholder="Type car model or specifications and press Enter...", label_visibility="collapsed")
-        with c_up:
-            uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-        
-        submitted = st.form_submit_button("Search", use_container_width=True)
+with st.form("search_form", clear_on_submit=False):
+    c_in, c_up = st.columns([0.91, 0.09])
+    with c_in:
+        user_query = st.text_input("Search", placeholder="Type car model or specifications and press Enter...", label_visibility="collapsed")
+    with c_up:
+        uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+    
+    submitted = st.form_submit_button("Search", use_container_width=True)
 
 # ------------------------------------------------------------------------------
 # 5. Execution & Results Display
@@ -464,48 +466,46 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
     final_q = f"{det_car} {user_query}".strip()
     df_res = hybrid_search(final_q, top_k=6)
 
-    _, col_res, _ = st.columns([1, 2.6, 1])
-    with col_res:
-        st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:25px 0 15px;">🎯 Live Market Results for: "{final_q}"</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:35px 0 15px; max-width:820px; margin-left:auto; margin-right:auto;">🎯 Live Market Results for: "{final_q}"</div>', unsafe_allow_html=True)
 
-        for _, r in df_res.iterrows():
-            deal = str(r.get('deal_label', 'Fair Market Price'))
-            if "Great Deal" in deal:
-                badge_html = '<span class="deal-badge-great">🟢 Great Deal</span>'
-            elif "Overpriced" in deal:
-                badge_html = '<span class="deal-badge-overpriced">🔴 Overpriced</span>'
-            else:
-                badge_html = '<span class="deal-badge-fair">🟡 Fair Price</span>'
+    for _, r in df_res.iterrows():
+        deal = str(r.get('deal_label', 'Fair Market Price'))
+        if "Great Deal" in deal:
+            badge_html = '<span class="deal-badge-great">🟢 Great Deal</span>'
+        elif "Overpriced" in deal:
+            badge_html = '<span class="deal-badge-overpriced">🔴 Overpriced</span>'
+        else:
+            badge_html = '<span class="deal-badge-fair">🟡 Fair Price</span>'
 
-            st.markdown(f"""
-            <div class="car-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 1.3rem; font-weight: 700; color: #fff;">{r['name']}</span>
-                    <div>{badge_html}</div>
+        st.markdown(f"""
+        <div class="car-card" style="max-width:820px; margin-left:auto; margin-right:auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.3rem; font-weight: 700; color: #fff;">{r['name']}</span>
+                <div>{badge_html}</div>
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 8px; color: #94a3b8; font-size: 0.88rem;">
+                <span>⚙️ {r['transmission']}</span>
+                <span>🛣️ {r['mileage']:,.0f} km</span>
+                <span>📍 {r['location']}</span>
+                <span>⚡ Match: {r['match_score']}%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span style="color: #94a3b8; font-size: 0.82rem;">Listed Price:</span><br>
+                    <strong style="color: #fff; font-size: 1.2rem;">{r['price']:,.0f} EGP</strong>
                 </div>
-                <div style="display: flex; gap: 15px; margin-top: 8px; color: #94a3b8; font-size: 0.88rem;">
-                    <span>⚙️ {r['transmission']}</span>
-                    <span>🛣️ {r['mileage']:,.0f} km</span>
-                    <span>📍 {r['location']}</span>
-                    <span>⚡ Match: {r['match_score']}%</span>
+                <div>
+                    <span style="color: #94a3b8; font-size: 0.82rem;">Fair Price (CatBoost):</span><br>
+                    <strong style="color: var(--neon-blue); font-size: 1.2rem;">{r['predicted_fair_price']:,.0f} EGP</strong>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <span style="color: #94a3b8; font-size: 0.82rem;">Listed Price:</span><br>
-                        <strong style="color: #fff; font-size: 1.2rem;">{r['price']:,.0f} EGP</strong>
-                    </div>
-                    <div>
-                        <span style="color: #94a3b8; font-size: 0.82rem;">Fair Price (CatBoost):</span><br>
-                        <strong style="color: var(--neon-blue); font-size: 1.2rem;">{r['predicted_fair_price']:,.0f} EGP</strong>
-                    </div>
-                    <div>
-                        <a href="{r['item_url']}" target="_blank" style="display: inline-block; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--neon-blue); color: #fff; padding: 7px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">
-                            View Listing ↗
-                        </a>
-                    </div>
+                <div>
+                    <a href="{r['item_url']}" target="_blank" style="display: inline-block; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--neon-blue); color: #fff; padding: 7px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">
+                        View Listing ↗
+                    </a>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 else:
     st.markdown("""
     <div style="text-align: center; color: #8b929a; margin-top: 50px;">
