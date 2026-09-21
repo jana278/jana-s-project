@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------------------
-# 1. Background Image & Dark Cinematic Theme CSS (Optimized Width & Symmetrical)
+# 1. Background Image & Dark Cinematic Theme CSS (Exact Dimensions & Elements)
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def get_image_data(image_path="mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.jpg", mime="image/jpeg"):
@@ -89,7 +89,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Perfectly Symmetrical & Balanced Brand Title */
+/* Hero Header & Continuous Box */
 .hero-box {{
     text-align: center;
     margin: 0 auto 35px auto;
@@ -125,7 +125,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     letter-spacing: -0.5px;
 }}
 
-/* Search Bar (Balanced Width & Lower Position) */
+/* Search Bar */
 div[data-testid="stHorizontalBlock"] {{
     background: transparent !important;
     border: none !important;
