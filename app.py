@@ -2,6 +2,7 @@ import os
 import re
 import random
 from PIL import Image
+import numpy as np
 import pandas as pd
 import joblib
 import torch
