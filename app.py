@@ -8,6 +8,8 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 import joblib
 import torch
 from catboost import Pool
