@@ -1,0 +1,11 @@
+torch
+transformers
+pillow
+catboost
+beautifulsoup4
+requests
+pandas
+numpy
+streamlit
+joblib
+scikit-learn
