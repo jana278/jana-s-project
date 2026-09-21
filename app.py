@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------------------------
-# 1. Background Image & Dark Cinematic Theme CSS (Mercedes AMG GT3 Neon)
+# 1. Background Image & Dark Cinematic Theme CSS
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def get_image_data(image_path="mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.jpg", mime="image/jpeg"):
@@ -39,7 +39,7 @@ BG_IMAGE = get_image_data("mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.j
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
 :root {{
     --neon-blue: #38bdf8;
@@ -83,35 +83,47 @@ html, body, [data-testid="stAppViewContainer"] {{
     position: relative;
     z-index: 2;
     max-width: 1100px;
-    padding-top: 2.5rem;
+    padding-top: 4rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Hero Header & Unified Title Style */
+/* Hero Header & Big Continuous Rectangle Title */
 .hero-box {{
     text-align: center;
-    margin: 10px auto 35px auto;
+    margin: 10px auto 45px auto;
     position: relative;
     z-index: 2;
 }}
-.hero-title {{
-    margin: 0;
-    font-size: clamp(2.8rem, 5vw, 4.2rem);
+.brand-container {{
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid rgba(56, 189, 248, 0.4);
+    border-radius: 16px;
+    padding: 8px 10px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15);
+    backdrop-filter: blur(12px);
+}}
+.brand-apex {{
+    background: #38bdf8;
+    color: #030712;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
     font-weight: 800;
-    letter-spacing: -1.5px;
+    padding: 8px 24px;
+    border-radius: 10px;
+    letter-spacing: -1px;
 }}
-.title-apex {{
-    color: var(--neon-blue);
-    text-shadow: 0 0 30px rgba(56, 189, 248, 0.45);
-}}
-.title-motors {{
+.brand-motors {{
     color: #ffffff;
-    margin-left: 6px;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    padding: 8px 24px;
+    letter-spacing: -1px;
 }}
 
-/* شريط البحث الموحد (Glassmorphism & Neon Blue) */
+/* شريط البحث الموحد (مرفوع للأعلى نسبياً وبشكل أنيق) */
 div[data-testid="stHorizontalBlock"] {{
     background: transparent !important;
     border: none !important;
@@ -410,13 +422,13 @@ def hybrid_search(user_query: str = "", top_k: int = 8):
     return add_valuation_columns(sorted_df)
 
 # ------------------------------------------------------------------------------
-# 4. Clean Unified Title & Search Hub
+# 4. UI Layout & Search Hub
 # ------------------------------------------------------------------------------
 st.markdown("""
 <div class="hero-box">
-    <h1 class="hero-title">
-        <span class="title-apex">Apex</span><span class="title-motors">Motors</span>
-    </h1>
+    <div class="brand-container">
+        <span class="brand-apex">Apex</span><span class="brand-motors">Motors</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -496,7 +508,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
             """, unsafe_allow_html=True)
 else:
     st.markdown("""
-    <div style="text-align: center; color: #8b929a; margin-top: 40px;">
-        <p style="font-size: 0.95rem;">Type your search query above and press <strong>Enter</strong>, or click the camera icon 📷 to scan a car image</p>
+    <div style="text-align: center; color: #8b929a; margin-top: 50px;">
+        <p style="font-size: 0.95rem;">Type your search query above and press <strong>Enter</strong> for instant search, or click the camera icon 📷 to upload a car image</p>
     </div>
     """, unsafe_allow_html=True)
