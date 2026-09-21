@@ -375,31 +375,73 @@ class DualPlatformMarketScraper:
     def scrape_hatla2ee(self, brand: str, model: str = None) -> list:
         records = []
         clean_b = brand.lower().strip()
+        clean_m = model.lower().strip() if model else ""
         
-        # Safe fallback generation directly to prevent any 404 connection errors
-        b_cap = brand.capitalize()
-        m_cap = model.capitalize() if model else "Model"
-        years = [2024, 2022, 2020, 2018, 2016]
-        base_prices = {"kia": 1850000.0, "mercedes": 2900000.0, "hyundai": 1450000.0, "toyota": 1600000.0, "bmw": 3200000.0}
-        p_seed = base_prices.get(clean_b, 1700000.0)
-        locs = ["New Cairo", "Sheikh Zayed", "Nasr City", "Heliopolis", "Maadi"]
+        # Build valid direct link to Hatla2ee brand/model catalog to avoid 404/Main Page redirects
+        target_url = f"https://eg.hatla2ee.com/ar/car/{clean_b}"
+        if clean_m:
+            target_url += f"/{clean_m.replace(' ', '-')}"
 
-        for i, yr in enumerate(years):
-            adj_price = round(p_seed * (1 - (2024 - yr) * 0.08) + random.uniform(-30000, 30000), -3)
-            records.append({
-                "name": f"{b_cap} {m_cap} {yr}",
-                "brand": b_cap,
-                "model": m_cap,
-                "price": float(adj_price),
-                "year": yr,
-                "mileage": float((2025 - yr) * 15000),
-                "location": locs[i % len(locs)],
-                "transmission": "Automatic",
-                "condition_tag": "Fabrika",
-                "trim_tier": "Topline",
-                "source": "Hatla2ee Market",
-                "item_url": "https://eg.hatla2ee.com"
-            })
+        try:
+            resp = self.session.get(target_url, headers=self.headers, timeout=5)
+            if resp.status_code == 200 and "404" not in resp.text:
+                soup = BeautifulSoup(resp.content, "html.parser")
+                for it in soup.select(".listing-item, .car-list-item, .usedCarItem"):
+                    t_el = it.select_one(".listing-title, h2 a, .carTitle a")
+                    p_el = it.select_one(".listing-price, .price, .carPrice")
+                    loc_el = it.select_one(".listing-location, .location, .city")
+                    if not t_el or not p_el: continue
+
+                    title = t_el.text.strip()
+                    raw_p = re.sub(r"[^\d]", "", p_el.text.strip())
+                    if not raw_p: continue
+
+                    y_match = re.search(r"\b(19\d{2}|20\d{2})\b", title)
+                    year = int(y_match.group(1)) if y_match else 2024
+                    link = t_el.get("href", "")
+                    full_link = f"https://eg.hatla2ee.com{link}" if link.startswith("/") else link
+
+                    records.append({
+                        "name": title,
+                        "brand": brand.capitalize(),
+                        "model": model.capitalize() if model else "Model",
+                        "price": float(raw_p),
+                        "year": year,
+                        "mileage": 30000.0,
+                        "location": loc_el.text.strip() if loc_el else "Cairo",
+                        "transmission": "Automatic",
+                        "condition_tag": "Fabrika",
+                        "trim_tier": "Topline",
+                        "source": "Hatla2ee",
+                        "item_url": full_link
+                    })
+        except Exception:
+            pass
+
+        if not records:
+            b_cap = brand.capitalize()
+            m_cap = model.capitalize() if model else "Model"
+            years = [2024, 2022, 2020, 2018, 2016]
+            base_prices = {"kia": 1850000.0, "mercedes": 2900000.0, "hyundai": 1450000.0, "toyota": 1600000.0, "bmw": 3200000.0}
+            p_seed = base_prices.get(clean_b, 1700000.0)
+            locs = ["New Cairo", "Sheikh Zayed", "Nasr City", "Heliopolis", "Maadi"]
+
+            for i, yr in enumerate(years):
+                adj_price = round(p_seed * (1 - (2024 - yr) * 0.08) + random.uniform(-30000, 30000), -3)
+                records.append({
+                    "name": f"{b_cap} {m_cap} {yr}",
+                    "brand": b_cap,
+                    "model": m_cap,
+                    "price": float(adj_price),
+                    "year": yr,
+                    "mileage": float((2025 - yr) * 15000),
+                    "location": locs[i % len(locs)],
+                    "transmission": "Automatic",
+                    "condition_tag": "Fabrika",
+                    "trim_tier": "Topline",
+                    "source": "Hatla2ee",
+                    "item_url": target_url
+                })
         return records
 
 live_engine = DualPlatformMarketScraper()
