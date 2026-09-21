@@ -85,7 +85,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     padding-bottom: 3rem;
 }}
 
-#MainMenu, header, footer {visibility: hidden !important; display: none !important;}
+#MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
 /* Hero Header */
 .hero-box {{
