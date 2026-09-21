@@ -18,14 +18,14 @@ import streamlit.components.v1 as components
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 st.set_page_config(
-    page_title="Apex Motors • Smart Car Market Intelligence",
+    page_title="Apex Motors | Smart Car Market",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ------------------------------------------------------------------------------
-# 1. Background Image & Dark Cinematic Theme CSS (Exact Dimensions & Elements)
+# 1. Background Image & Dark Cinematic Theme CSS (Exact Layout & Neon Blue Theme)
 # ------------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def get_image_data(image_path="mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.jpg", mime="image/jpeg"):
@@ -39,13 +39,13 @@ BG_IMAGE = get_image_data("mercedes-amg-gt3-speed-blur-desktop-wallpaper-cover.j
 
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {{
     --neon-blue: #38bdf8;
-    --dark-bg: #030712;
-    --white: #f8fafc;
-    --muted: #94a3b8;
+    --darkest-bg: #030712;
+    --white: #f7f7f7;
+    --muted: #a9adb5;
 }}
 
 html, body, [data-testid="stAppViewContainer"] {{
@@ -56,7 +56,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     min-height: 100vh;
     background: transparent !important;
     color: var(--white);
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
 }}
 
 .background-car {{
@@ -68,79 +68,161 @@ html, body, [data-testid="stAppViewContainer"] {{
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: .55;
+    opacity: .85;
 }}
 
 .background-car:before {{
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(3,7,18,.92) 0%, rgba(3,7,18,.60) 50%, rgba(3,7,18,.92) 100%),
-                linear-gradient(180deg, rgba(3,7,18,.5) 0%, rgba(3,7,18,.2) 40%, rgba(3,7,18,.98) 100%);
+    background:
+        linear-gradient(90deg, rgba(3,7,18,.85) 0%, rgba(3,7,18,.45) 48%, rgba(3,7,18,.85) 100%),
+        linear-gradient(180deg, rgba(3,7,18,.4) 0%, rgba(3,7,18,.2) 46%, rgba(3,7,18,.9) 100%);
+}}
+
+.background-car:after {{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 38%, rgba(56,189,248,.08), transparent 40%);
 }}
 
 .main .block-container {{
     position: relative;
     z-index: 2;
-    max-width: 820px;
-    padding-top: 3rem;
+    max-width: 1180px;
+    padding-top: 1.5rem;
     padding-bottom: 3rem;
 }}
 
 #MainMenu, header, footer {{visibility: hidden !important; display: none !important;}}
 
-/* Hero Header & Continuous Box */
+/* Hero Section */
 .hero-box {{
-    text-align: center;
-    margin: 0 auto 35px auto;
     position: relative;
-    z-index: 2;
+    min-height: 220px;
     display: flex;
-    justify-content: center;
-}}
-.brand-container {{
-    display: inline-flex;
     align-items: center;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1.3px solid rgba(56, 189, 248, 0.35);
-    border-radius: 14px;
-    padding: 4px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.12);
-    backdrop-filter: blur(14px);
-}}
-.brand-apex {{
-    background: #38bdf8;
-    color: #030712;
-    font-size: 1.8rem;
-    font-weight: 800;
-    padding: 8px 22px;
-    border-radius: 10px;
-    letter-spacing: -0.5px;
-}}
-.brand-motors {{
-    color: #ffffff;
-    font-size: 1.8rem;
-    font-weight: 800;
-    padding: 8px 22px;
-    letter-spacing: -0.5px;
+    justify-content: center;
+    text-align: center;
+    margin: 0 auto;
+    background: transparent;
+    border: 0;
 }}
 
-/* Search Bar */
+.hero-content {{
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}}
+
+.hero-kicker {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.7);
+    color: #e2e8f0;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    backdrop-filter: blur(10px);
+}}
+
+.hero-title {{
+    margin: 0;
+    color: #fff;
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -2px;
+    text-shadow: 0 10px 40px rgba(0,0,0,.9);
+}}
+
+.hero-title span {{
+    color: var(--neon-blue);
+    text-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+}}
+
+.hero-subtitle {{
+    color: #d1d5db;
+    font-size: .95rem;
+    max-width: 620px;
+    margin: 12px auto 0;
+    line-height: 1.55;
+    text-shadow: 0 3px 18px #000;
+}}
+
+.hero-line {{
+    width: 54px;
+    height: 3px;
+    background: var(--neon-blue);
+    border-radius: 99px;
+    margin: 12px auto 0;
+    box-shadow: 0 0 20px rgba(56,189,248,.5);
+}}
+
+/* Features Grid */
+.feature-row {{
+    position: relative;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 760px;
+    margin: 16px auto 25px;
+    gap: 0;
+}}
+
+.feature-item {{
+    text-align: center;
+    padding: 5px 18px;
+    border-right: 1px solid rgba(255,255,255,.14);
+}}
+
+.feature-item:last-child {{
+    border-right: 0;
+}}
+
+.feature-icon {{
+    color: var(--neon-blue);
+    font-size: 1rem;
+    margin-bottom: 3px;
+}}
+
+.feature-title {{
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+}}
+
+.feature-desc {{
+    color: #9ca3af;
+    font-size: .65rem;
+    margin-top: 2px;
+}}
+
+/* Search Bar (Exact Layout matching reference image with Neon Blue theme) */
 div[data-testid="stHorizontalBlock"] {{
     background: transparent !important;
     border: none !important;
 }}
 
 div[data-testid="stHorizontalBlock"]:has(input) {{
-    background: rgba(15, 23, 42, 0.88) !important;
-    border: 1.3px solid rgba(56, 189, 248, 0.4) !important;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(3, 7, 18, 0.96) 100%) !important;
+    border: 1.2px solid rgba(56, 189, 248, 0.4) !important;
     border-radius: 999px !important;
-    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(56, 189, 248, 0.25) !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(56, 189, 248, 0.2) !important;
     backdrop-filter: blur(18px) !important;
     padding: 0 16px 0 24px !important;
     align-items: center !important;
-    height: 56px !important;
-    max-width: 820px !important;
+    height: 54px !important;
+    max-width: 760px !important;
     margin: 0 auto !important;
 }}
 
@@ -190,7 +272,7 @@ div[data-testid="stFileUploader"] button:hover {{
 }}
 div[data-testid="stFileUploader"] button:before {{
     content: "📷";
-    font-size: 1.3rem;
+    font-size: 1.25rem;
 }}
 div[data-testid="stFileUploader"] button span, div[data-testid="stFileUploader"] button p, div[data-testid="stFileUploaderFile"] {{
     display: none !important;
@@ -202,14 +284,13 @@ div[data-testid="stFormSubmitButton"] {{
 
 /* Cards & Badges */
 .car-card {{
-    background: rgba(15, 23, 42, 0.88);
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 16px;
-    padding: 20px;
+    background: rgba(10, 12, 16, 0.85);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 18px;
+    padding: 22px;
     margin-bottom: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.5);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.55);
+    backdrop-filter: blur(14px);
     transition: all 0.2s ease;
 }}
 .car-card:hover {{
@@ -223,7 +304,7 @@ div[data-testid="stFormSubmitButton"] {{
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: .82rem;
+    font-size: .85rem;
 }}
 .deal-badge-overpriced {{
     background: rgba(239,68,68,.15);
@@ -232,7 +313,7 @@ div[data-testid="stFormSubmitButton"] {{
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: .82rem;
+    font-size: .85rem;
 }}
 .deal-badge-fair {{
     background: rgba(56,189,248,.15);
@@ -241,7 +322,7 @@ div[data-testid="stFormSubmitButton"] {{
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: .82rem;
+    font-size: .85rem;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -426,20 +507,30 @@ def hybrid_search(user_query: str = "", top_k: int = 8):
     return add_valuation_columns(sorted_df)
 
 # ------------------------------------------------------------------------------
-# 4. UI Layout & Search Hub
+# 4. Hero Section & Search Hub
 # ------------------------------------------------------------------------------
 st.markdown("""
 <div class="hero-box">
-    <div class="brand-container">
-        <span class="brand-apex">Apex</span><span class="brand-motors">Motors</span>
+    <div class="hero-content">
+        <div class="hero-kicker">✦ SMART CAR MARKET</div>
+        <h1 class="hero-title">Apex <span>Motors</span></h1>
+        <div class="hero-line"></div>
+        <div class="hero-subtitle">Find the right car, get expert insights, and make smarter decisions with the power of AI.</div>
     </div>
+</div>
+
+<div class="feature-row">
+    <div class="feature-item"><div class="feature-icon">⌁</div><div class="feature-title">Analysis</div><div class="feature-desc">Understand your needs</div></div>
+    <div class="feature-item"><div class="feature-icon">▧</div><div class="feature-title">Image Detection</div><div class="feature-desc">Identify car details</div></div>
+    <div class="feature-item"><div class="feature-icon">◇</div><div class="feature-title">Price Prediction</div><div class="feature-desc">Get fair market value</div></div>
+    <div class="feature-item"><div class="feature-icon">▥</div><div class="feature-title">Smart Results</div><div class="feature-desc">Best matches for you</div></div>
 </div>
 """, unsafe_allow_html=True)
 
 with st.form("search_form", clear_on_submit=False):
     c_in, c_up = st.columns([0.91, 0.09])
     with c_in:
-        user_query = st.text_input("Search", placeholder="Type car model or specifications and press Enter...", label_visibility="collapsed")
+        user_query = st.text_input("Search", placeholder="Type your car requirements and press Enter...", label_visibility="collapsed")
     with c_up:
         uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
     
@@ -466,7 +557,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
     final_q = f"{det_car} {user_query}".strip()
     df_res = hybrid_search(final_q, top_k=6)
 
-    st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:35px 0 15px; max-width:820px; margin-left:auto; margin-right:auto;">🎯 Live Market Results for: "{final_q}"</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="color:#fff; font-size:1.15rem; font-weight:700; margin:35px 0 15px; max-width:760px; margin-left:auto; margin-right:auto;">🎯 Live Market Results for: "{final_q}"</div>', unsafe_allow_html=True)
 
     for _, r in df_res.iterrows():
         deal = str(r.get('deal_label', 'Fair Market Price'))
@@ -478,7 +569,7 @@ if submitted or (user_query and user_query.strip()) or uploaded_file:
             badge_html = '<span class="deal-badge-fair">🟡 Fair Price</span>'
 
         st.markdown(f"""
-        <div class="car-card" style="max-width:820px; margin-left:auto; margin-right:auto;">
+        <div class="car-card" style="max-width:760px; margin-left:auto; margin-right:auto;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 1.3rem; font-weight: 700; color: #fff;">{r['name']}</span>
                 <div>{badge_html}</div>
